@@ -14,22 +14,43 @@ library(plyr)
 library(dplyr)
 
 ## read data
-wvs <- read.csv(here::here("data/WVS.csv"))
+gss <- read.csv(here::here("data/GSS.2006.csv"))
 ```
 
 ##### Q1: Run a simple bivariate regression, and interpret your results.  (Did the results fit your expectations?  Why?  Why not?)  
 
+For this question, I will look at the relationship between hours worked (`hrs1`) and stress in the workplace (`stress`).
+`hrs1` is a semi-continuous variable, taking integer numbers on the real line. `stress` is a categorical variable that answers the question: How often do you find work stressful? It is coded from (1) always to (5) never. As the stress number code increases, we read that to mean that a person's work stress is decreasing. I expect that as a person works more hours, their points associated with the `stress` variable with decrease. This means that they lean more towards the beginning of the spectrum that indicates higher stress levels.
 
 ```{r q1}
-#m1 <- lm(, data = wvs)
-
+plot(as.factor(gss$stress), gss$hrs1)
+m1 <- lm(stress ~ hrs1, data = gss)
+summary(m1)
 ```
 
-
+In our linear model above, we see that a 1 hour increase of hours worked in the week, respondents is expected to find a 0.0170 points decrease in finding their job as less stressful. In other words, they are more likely to find their job more stressful by 0.0170 points. This model fit my expectations, although the explained variation of `stress` from `hrs1` is lower than I thought it would be, at 5.2%.
 
 ##### Q2: Add an additional variable that might mediate or partly "explain" the initial association from that simple regression above -- and explain your results.  Did it work out?  Yes?  No? 
 
+I am choosing to consider `famvswk` as a mediator variable. `famvswk` is categorical variable that relating to the question: How often do the demands of your family interfere with your work on the job? The categories range from (1) Often to (4) Never. As the `famvswk` number code increases, we read that to mean that a person's family life decreasingly interferes with their work.
+
+I chose this as a mediator variable given that it's possible that as a person has more work hours, they have less time to meet their family responsibilities causing family-work tensions; this might partially explain the association between hours worked and work stress. The model below adds `famvswk` to our existing linear model from part 1.
+
 ```{r q2}
+m2 <- lm(stress ~ hrs1 + famvswk, data = gss)
+summary(m2)
+```
+
+Hours worked held constant, we see that for a one category increase on a scale of (1) Often to (4) Never in the `famvswk` variable, respondents are expected to be 0.200 points higher on finding work less stressful. In other words, as people find balance in their work and home life (i.o.w `famvswk` variable increases), their work stress decreases (i.o.w `stress` variable increases).
+
+We see that the coefficient for hour works changed from -0.0170 to -0.0157. We can take this to mean that `famvswk` does have a mediating effect in the relationship between `hrs1` and `stress`, although the effect is not strong by any means. We see below that in running the regression for the mediator on X, and Y on the mediator, both relationships produce significant results. Still, we see in the first regression model for the mediator on X that $R^2$ is very low.
+
+```{r}
+## x -> m
+summary(lm(famvswk ~ hrs1, data = gss))
+
+## m -> y
+summary(lm(stress ~ hrs1, data = gss))
 
 ```
 
@@ -37,7 +58,8 @@ wvs <- read.csv(here::here("data/WVS.csv"))
 ##### Q3: Run another multiple regression.  Tell me how you expect your dependent variable to be affected by the independent variables.  Interpret your results.
 
 ```{r q3}
-
+m3 <- lm(promteok ~ hlthdays , data = gss)
+summary(m3)
 ```
 
 

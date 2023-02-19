@@ -1,0 +1,109 @@
+---
+title: "Lab 02 -- Data Analysis"
+author: "Melissa Juarez"
+date: "February 14, 2022"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(janitor)
+library(plyr)
+library(dplyr)
+
+## read data
+gss <- read.csv(here::here("GSS.2006.csv"))
+```
+
+##### Q1: Recode 1 *sort of* continuous variable into categories. Tell me what you did and explain the variable(s).
+
+```{r q1-childs}
+# view the variable as it exists
+tabyl(gss$childs) %>%
+  adorn_pct_formatting(digits = 1)
+
+# Record Variable as 2 categories and dropping NAs
+gss <- gss %>% 
+  mutate(child_cat = case_when(
+    childs <= 2 ~ "Population Shrinkers & Mantainers",
+    childs > 2 & childs <= 8 ~ "Population Growers"
+  ))
+
+# Display new table
+tabyl(gss$child_cat, show_na = FALSE) %>%
+  adorn_pct_formatting(digits = 1) %>%
+  knitr::kable(format = "html", caption = 'Contribution to Population Growth among 2006 GSS Respondents') %>%
+  kableExtra::kable_styling()
+
+```
+
+I chose to recode the variable `childs` which describes the amount a children a person has had in their life time. The variable takes integer inputs from 0 to 8. The input 8 indicates 8 or more children, and the input NA indicates that a person did not answer the question. I decided to recode these variables into two categories: Population Growers and Populations Shrinkers and Maintainers. According to the OECD, "a total fertility rate of 2.1 children per woman ensures a broadly stable population", implying that anything less contributes to a decreasing population & anything more contributes to a growing population.
+
+In accordance with this, I coded the `childs` variable to categorize people who have had 2 or less children {inputs 0,1,2} as `Population Shrinkers and Maintainers` and those who have had 3 or more children {inputs 3 through 8} as `Population Growers`. The observations where the input was NA were dropped.
+
+##### Q2: Recode 1 another variable and attach value labels. Tell me what you did and explain the variable(s).
+
+```{r q2 age-frst-kid}
+# view the distribution of agekdborn and look at the centers
+summary(gss$agekdbrn)
+
+# recode into 2 categories
+gss <- gss %>% 
+  mutate(agekdbrn_cat = case_when(
+    agekdbrn <= 23 ~ "23 or younger",
+    agekdbrn > 23 ~ "Older than 23"
+  ))
+
+# create a table
+tabyl(gss$agekdbrn_cat, show_na = FALSE) %>%
+  adorn_pct_formatting(digits = 1) %>%
+  knitr::kable(format = "html") %>%
+  kableExtra::kable_styling()
+```
+
+I chose to recode the variable `agekdbrn` which the respondent's age when their first child was born. The variable takes real value integer inputs above 0. The first thing I did was use the `summary()` function to see the centers of distribution for the data. The median age at which respondent's had their first child was at 23 years old. I used this age as a reference to create my two categories: `23 or younger` and `Older than 23`.
+
+##### Q3: Use one (or both) of your recoded variables to do a cross-tabulation (as you had done last week, with prop.table, doBy, or ddply). Explain your results.
+
+```{r q3}
+# using code from prof's example
+gmodels::CrossTable(gss$child_cat, gss$agekdbrn_cat, prop.r=F, prop.c=T, prop.t=F, prop.chisq=F, format="SPSS") 
+```
+
+The table above shows the crosstabs of the recoded variables from the above two questions `agekdbrn` and `childs`. In the cross-tabulation, we can see whether people who had their first child at an older or younger age were more likely to be a population grower or shrinker/maintainer. We see in the table that among respondents who had their first child at age 23 or younger, almost 53% of them were population growers, having 3 or more children. 46% of these respondents had 2 or less children. On the other hand, among respondents who had their first kid after 23, almost 70% of them ended up having 2 or less kids and 30% of them have 3 or more kids.
+
+We see that in our data, those who had their first kid at 23 or younger were more likely than not to have 3 or more kids. Those who had their first kid after 23 were more likely than not to have 2 or less kids.
+
+##### Q4: Run a linear regression with 1 independent and 1 dependent variable. Make all of the recodes necessary to make the model as easy to interpret as possible. And explain your results.
+
+```{r q4}
+# create & summarize our simple linear model
+m1 <- lm(prestg80 ~ paeduc, data = gss)
+summary(m1)
+
+```
+
+The linear regression model above considers the regression of job prestige points (`prestg80`) on paternal education level (`paeduc`). `paeduc` is the explanatory variable and `prestg80` is the response variable. Using the `summary()` function, we get the regression line $\widehat{prestg80} = 35.45 + .87(\widehat{paeduc})$. Both the slope and the intercept estimates are statistically signicant, with p-values near 0.
+
+We can interpret the model in the following way:
+
+-   *Slope:* Given two respondents, where one respondent's father received 1 more year of education than the other, the respondent with the father with the greater education is expected to have 0.868 higher prestige points in their job. In other words, for a 1 year increase in a respondent's father's education, the respondent is expected to have a 0.868 increase in job prestige points.
+-   *Intercept:* When a respondent's father has no years of education ($paeduc = 0$), the respondent is expected to have 35.45 prestige points.
+-   *$R^2$:* It is given that the Multiple R-squared = 0.07395. We can interpret this by saying that 7.395% of the variation in Job Prestige Points is explained by the linear relationship between Job Prestige Points and Father's Education level. That's a pretty bad model </3.
+
+##### Q5: Plot two variables, either as a scatter plot or boxplot. Explain your results.
+
+```{r q5}
+
+plot(gss$paeduc, gss$prestg80, main="Exploring Nepotism",
+     xlab="Respondent's Father's Education", ylab="Respondent's Job Prestige", pch=19) ## scatter X and Y ##
+
+abline(lm(prestg80 ~ paeduc, data=gss), col="blue") 
+
+```
+
+The above graph shows a scatter plot of `paeduc`, respondent's father's education, and `prestg80`, respondent's job prestige. Overlaying the linear model from before, we see that as a respondent's father's education increases, their job prestige increases. 
+
+Despite the positive linear association, we can visually see  how the scatter plot has a weak correlation due to the lack of linear close-togetherness (for lack of a better visual definition) among the points in the plot. This tells us that although both variables increase together, the relationship is not very strong. There is a lot of unexplained variation, 1-$R^2$ = 92.6% of unexplained variation, to be exact.

@@ -1,0 +1,55 @@
+---
+title: "Lab 02 -- Data Analysis"
+author: "Melissa Juarez"
+date: "February 21, 2022"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(janitor)
+library(plyr)
+library(dplyr)
+
+## read data
+
+```
+
+##### Q1: 
+
+```{r q1, message=FALSE, warning=FALSE}
+
+```
+
+
+
+##### Q2: 
+
+```{r q2}
+
+```
+
+
+##### Q3: 
+
+
+```{r q3}
+
+```
+
+
+##### Q4: 
+
+```{r q4}
+
+```
+
+
+##### Q5: 
+
+```{r q5}
+
+```
+

@@ -1,0 +1,56 @@
+---
+title: "Lab 03 -- Data Analysis"
+author: "Melissa Juarez"
+date: "February 21, 2022"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(janitor)
+library(plyr)
+library(dplyr)
+
+## read data
+wvs <- read.csv(here::here("data/WVS.csv"))
+```
+
+##### Q1: Run a simple bivariate regression, and interpret your results.  (Did the results fit your expectations?  Why?  Why not?)  
+
+
+```{r q1}
+#m1 <- lm(, data = wvs)
+
+```
+
+
+
+##### Q2: Add an additional variable that might mediate or partly "explain" the initial association from that simple regression above -- and explain your results.  Did it work out?  Yes?  No? 
+
+```{r q2}
+
+```
+
+
+##### Q3: Run another multiple regression.  Tell me how you expect your dependent variable to be affected by the independent variables.  Interpret your results.
+
+```{r q3}
+
+```
+
+
+##### Q4: Now add another independent variable to that model in Question 3, preferably a set of dummy variables.  Tell me why you added that new set of variables and what effect you expected them to have.  Did they have an effect?  Interpret that new model. 
+
+```{r q4}
+
+```
+
+
+##### Q5: Now run a partial F test comparing the model in Question 3 to the model in Question 4.  Does the F test support the idea of adding those new variables?  Why?  Why not? 
+
+```{r q5}
+
+```
+

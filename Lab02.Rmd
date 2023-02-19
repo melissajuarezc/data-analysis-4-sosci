@@ -14,7 +14,7 @@ library(plyr)
 library(dplyr)
 
 ## read data
-gss <- read.csv(here::here("GSS.2006.csv"))
+gss <- read.csv(here::here("data/GSS.2006.csv"))
 ```
 
 ##### Q1: Recode 1 *sort of* continuous variable into categories. Tell me what you did and explain the variable(s).

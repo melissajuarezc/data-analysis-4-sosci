@@ -43,7 +43,7 @@ summary(m2)
 
 Hours worked held constant, we see that for a one category increase on a scale of (1) Often to (4) Never in the `famvswk` variable, respondents are expected to be 0.200 points higher on finding work less stressful. In other words, as people find balance in their work and home life (i.o.w `famvswk` variable increases), their work stress decreases (i.o.w `stress` variable increases).
 
-We see that the coefficient for hour works changed from -0.0170 to -0.0157. We can take this to mean that `famvswk` does have a mediating effect in the relationship between `hrs1` and `stress`, although the effect is not strong by any means. We see below that in running the regression for the mediator on X, and Y on the mediator, both relationships produce significant results. Still, we see in the first regression model for the mediator on X that $R^2$ is very low.
+We see that the coefficient for hour works changed from -0.0170 to -0.0157 and continues to be significant. We can take this to mean that `famvswk` does have a mediating effect in the relationship between `hrs1` and `stress`, although the effect is not strong by any means. We see below that in running the regression for the mediator on X, and Y on the mediator, both relationships produce significant results. Still, we see in the first regression model for the mediator on X that $R^2$ is very low.
 
 ```{r}
 ## x -> m
@@ -58,8 +58,8 @@ summary(lm(stress ~ hrs1, data = gss))
 ##### Q3: Run another multiple regression.  Tell me how you expect your dependent variable to be affected by the independent variables.  Interpret your results.
 
 ```{r q3}
-m3 <- lm(promteok ~ hlthdays , data = gss)
-summary(m3)
+#m3 <- lm( ~  , data = gss)
+#summary(m3)
 ```
 
 

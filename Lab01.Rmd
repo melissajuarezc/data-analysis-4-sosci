@@ -16,17 +16,21 @@ library(dplyr)
 gss <- read.csv(here::here("data/GSS.2006.csv"))
 ```
 
-
 ##### Q1: Use the table command, summary or describe commands, to tabulate one variable; and explain your results.
 
 ```{r}
 summary(gss$hrs1); hist(gss$hrs1)
 ```
 
-I chose to look at the `hrs1` variable, which represent the number of hours the respondent worked in the last week. `hrs1` is a continuous variable taking any positive real number; thus, our `summary()` command gives us the five-number summary of this variable; we see that on average, a respondent worked 42.08 hours in the past week. Additionally, we see that the middle 50% of respondents worked between 38-50 hours, shown in our 1st and 3rd quartiles. It is alarming that our maximum hours worked reaches up to 89 hours -- in other words, this respondent worked an average of almost hours each day, Sunday-Saturday. Our `hist()` command shows this distribution visually. We have a unimodal distribution with kurtosis > 3, centered around 40 hours, but we also see that some respondents worked egregious hours on the right end of the histogram.
+I chose to look at the `hrs1` variable, which represent the number of hours the respondent worked in the last week.
+`hrs1` is a continuous variable taking any positive real number; thus, our `summary()` command gives us the five-number summary of this variable; we see that on average, a respondent worked 42.08 hours in the past week.
+Additionally, we see that the middle 50% of respondents worked between 38-50 hours, shown in our 1st and 3rd quartiles.
+It is alarming that our maximum hours worked reaches up to 89 hours -- in other words, this respondent worked an average of almost hours each day, Sunday-Saturday.
+Our `hist()` command shows this distribution visually.
+We have a unimodal distribution with kurtosis \> 3, centered around 40 hours, but we also see that some respondents worked egregious hours on the right end of the histogram.
 
-Thus, we see that the majority of working people have full-time jobs that demand appropriate working hours, usually around the 40-hr/week standard. However, 25% of respondents have more demanding jobs where they work from 51-89 hours.
-
+Thus, we see that the majority of working people have full-time jobs that demand appropriate working hours, usually around the 40-hr/week standard.
+However, 25% of respondents have more demanding jobs where they work from 51-89 hours.
 
 ##### Q2: Using either the plyr commands (the doBy command does not work anymore), compare the means and standard deviations for one variable, for at least two subgroups; and explain your results.
 
@@ -47,12 +51,18 @@ groups[order(groups$avg.hrs),]
 
 ```
 
-In this question, I looked at the mean and standard deviation of `hrs1`, signifying the amount of hours worked in the last week, grouped by the given respondent's `class` status. The `class` variable is nominal/categorical variable with the 4 categories: Lower Class, Working Class, Middle Class, Upper Class. I expected that the higher one's class status, the less that the person would work in a week -- mainly because I assume that their wage would be higher and thus, they would not need to work the same amount as individuals with lower wages to obtain the same products. However, I found that Middle and Working Class respondents in this sample worked more hours per week, on average, compared to Lower and Upper class respondents. The difference between the class with the highest average hours work (Middle Class) and the lowest average hours worked (Lower class) is about 7 hours. We might consider how part-time and full-time jobs are distributed among classes, as well as how different classes can access cars, childcare, etc in order to work in certain jobs. Among all subgroups, the standard deviation is large, anywhere between 14-18 hours; this means that the distribution of hours worked for a given subgroups spans across a vast range of hours. This further suggests that although there are differences in the average hours works in this sample between subgroups, it might be unlikely to say that the true average hours worked between groups is truly different. 
-
+In this question, I looked at the mean and standard deviation of `hrs1`, signifying the amount of hours worked in the last week, grouped by the given respondent's `class` status.
+The `class` variable is nominal/categorical variable with the 4 categories: Lower Class, Working Class, Middle Class, Upper Class.
+I expected that the higher one's class status, the less that the person would work in a week -- mainly because I assume that their wage would be higher and thus, they would not need to work the same amount as individuals with lower wages to obtain the same products.
+However, I found that Middle and Working Class respondents in this sample worked more hours per week, on average, compared to Lower and Upper class respondents.
+The difference between the class with the highest average hours work (Middle Class) and the lowest average hours worked (Lower class) is about 7 hours.
+We might consider how part-time and full-time jobs are distributed among classes, as well as how different classes can access cars, childcare, etc in order to work in certain jobs.
+Among all subgroups, the standard deviation is large, anywhere between 14-18 hours; this means that the distribution of hours worked for a given subgroups spans across a vast range of hours.
+This further suggests that although there are differences in the average hours works in this sample between subgroups, it might be unlikely to say that the true average hours worked between groups is truly different.
 
 ##### Q3: Using the gmodels or another command, cross-tabulate two categorical or ordinal variables (getting proportions); and explain your results.
 
-```{r}
+```{r q3}
 ## omit na's and rename number codes
 region_guns <- gss[,c("region","grass")] %>%
   na.omit() %>%
@@ -84,13 +94,14 @@ tabyl(region_guns, region, grass) %>%
   kableExtra::kable_styling()
 ```
 
-In this question, I looked at the cross tabulation of the variables `grass` and `region`. The variable `grass` is a nominal variable taking values Should/Shouldn't and describing a respondent's attitude on whether marijuana use should be legalized. The variable region is also categorical taking the values "New England", "Mid-Atlantic", "East North Central", "West North Central", "South Atlantic", "East South Central", "West South Central", "Mountain", "Pacific" depending on the geographical region where a respondent lives. 
+In this question, I looked at the cross tabulation of the variables `grass` and `region`.
+The variable `grass` is a nominal variable taking values Should/Shouldn't and describing a respondent's attitude on whether marijuana use should be legalized.
+The variable region is also categorical taking the values "New England", "Mid-Atlantic", "East North Central", "West North Central", "South Atlantic", "East South Central", "West South Central", "Mountain", "Pacific" depending on the geographical region where a respondent lives.
 
-The crosstabulation shows the different attitudes based on region. For example, we see that:
-- New England is the only region where the majority of respondents believe that weed should be legalized (54.5%).
-- The West South Central region has the most conservative views, with 76.7% of respondents saying that marijuana shouldn't be legalized. 
+The crosstabulation shows the different attitudes based on region.
+For example, we see that: - New England is the only region where the majority of respondents believe that weed should be legalized (54.5%).
+- The West South Central region has the most conservative views, with 76.7% of respondents saying that marijuana shouldn't be legalized.
 - Other conservative regions are the South Atlantic and Mid-Atlantic with 66.7% and 64.8% of respondents saying that marijuana shouldn't be legalized, respectively.
 
-In general, we see Southern states from Texas to Virginia typically having more conservative views, compared to the states in the North and Pacific, like Massachusetts/New Hampshire or Washington/Oregon. These patterns continue currently, in 2023, where many Southern states have not yet fully decriminalized the medical or recreational use of weed, while many Northeastern and Pacific states have adopted more liberal laws around the use of weed.
-
-
+In general, we see Southern states from Texas to Virginia typically having more conservative views, compared to the states in the North and Pacific, like Massachusetts/New Hampshire or Washington/Oregon.
+These patterns continue currently, in 2023, where many Southern states have not yet fully decriminalized the medical or recreational use of weed, while many Northeastern and Pacific states have adopted more liberal laws around the use of weed.

@@ -9,8 +9,6 @@ output:
 ```{r include=FALSE}
 library(here)
 library(tidyverse)
-library(janitor)
-library(plyr)
 library(dplyr)
 
 ## read data
@@ -57,22 +55,73 @@ summary(lm(stress ~ hrs1, data = gss))
 
 ##### Q3: Run another multiple regression.  Tell me how you expect your dependent variable to be affected by the independent variables.  Interpret your results.
 
-```{r q3}
-#m3 <- lm( ~  , data = gss)
-#summary(m3)
+```{r load-data-q3, include=FALSE}
+wvs <- read.csv(here::here("data/WVS.csv"))
 ```
+
+What is the relationship between age, gender, and education with attitudes about income gaps?
+
+In this problem, I look at the association between income attitudes with the following variables:
+-   `sex`/`V240`: this is an nominal categorical variable where 1 denotes male and 2 denotes female. This will be an independent variable.
+-   `educ`/`V188`: this is a ordinal categorical (continuos-ish) variable where 1 denotes having no formal schooling and 9 denotes having a university level degree. This will be an independent variable.
+-   `incmgrp`/`V239` this is an ordinal categorical (continuos-ish) variable where 1 denotes belonging to the lowest step of income classifications and 10 denotes belonging to the highest step of income classifications. This will be a dependent variable.
+-   `incomeattitude`/`V96` is my dependent variable which relates to income gap attitudes where 1 denotes "Incomes should be made more equal" and 10 denotes "We need larger income differences as incentives for individual effort". 
+
+I expect that when sex is held constant, as education levels increase, income attitudes will decrease meaning that attitudes shift towards supporting income equality. I also expect that when education is held constant, females will have attitudes with lower points (attitudes towards supporting income equality) than males. I expect that those belonging to higher income groups will be in higher favor of larger income gaps, as they are probably expected to benefit from them.
+
+Additionally, I will only be looking at responses from the Unites States.
+
+```{r q3}
+## multiple regression model & summary looking only at the US 
+
+## Note: I will also drop any rows with missign values in my variables of interest so that in the anova.
+## I don't get an error & my 2 models use the same data.
+
+us_wvs <- wvs %>% 
+  filter(V2 == 840) %>% ## US country code
+  dplyr::rename(c(incomeattitude = V96,
+         educ = V188,
+         sex = V240, ## 1 is male (base), 2 is female
+         incmgrp = V239,
+         religion = V9
+  )) %>%
+  select(incomeattitude, educ, sex, incmgrp, religion) %>%
+  na.omit()
+
+us_wvs$sex <- as.factor(us_wvs$sex)
+m3 <- lm(incomeattitude ~ sex + educ + incmgrp , data = us_wvs)
+summary(m3)
+
+```
+
+In the output above, we have the estimated model $incomeattitude = 4.479 - 0.316sex_{female} + 0.092educ + 0.172incmgrp$. We can interpret it as follows:
+-   Education & income group held constant, when sex == female (coded as 2), there is an expected 0.316 decrease in income attitudes, supporting in the direction of more equal income. 
+-   Sex & income group held constant, for an increase in 1 level of education, there is an expected 0.092 increase in income attitudes, supporting in the direction of large income differences. This differs from what I expected. *However, this is not an significant relationship.*
+-   Educ & sex held constant, for an increase in 1 income group level, there is an expected 0.172 increase in income attitudes, supporting in the direction of large income differences.
+
 
 
 ##### Q4: Now add another independent variable to that model in Question 3, preferably a set of dummy variables.  Tell me why you added that new set of variables and what effect you expected them to have.  Did they have an effect?  Interpret that new model. 
 
+I am adding the variable `religion`/`V9`, indication how important religion is to the respondent from (1) Very important to (4) Not at all important. I expect that as religion becomes less important, income attitude points will increase indicating a support towards income gaps.
+
 ```{r q4}
-
+m4 <- lm(incomeattitude ~ sex + educ + incmgrp + religion, data = us_wvs)
+summary(m4)
 ```
-
+In the output above, we have the estimated model $incomeattitude = 4.95 - 0.377sex_{female} + 0.123educ + 0.177incmgrp - 0.284religion$. We can interpret it as follows:
+-   Educ, sex, and income group held constant, for a 1 level increase in religion (indicating lower religious importance), we expect a 0.284 decrease in income attitudes in support of income equality. This is different from what I expected, and perhaps this may be because an increase in religious important migth reflect conservative attitudes?
+-   Education, religion, & income group held constant, when sex == female (coded as 2), there is an expected 0.377 decrease in income attitudes, supporting in the direction of more equal income. 
+-   Sex, religion, & income group held constant, for an increase in 1 level of education, there is an expected 0.123 increase in income attitudes, supporting in the direction of large income differences. This differs from what I expected. *However, this is still not an significant relationship.*
+-   Educ,religion, & sex held constant, for an increase in 1 income group level, there is an expected 0.177 increase in income attitudes, supporting in the direction of large income differences.
 
 ##### Q5: Now run a partial F test comparing the model in Question 3 to the model in Question 4.  Does the F test support the idea of adding those new variables?  Why?  Why not? 
 
 ```{r q5}
-
+anova(m3, m4)
 ```
+
+Here we are testing a null hypothesis that `incomeattitude` is dependent on `sex`, `educ`, and `incmgrp`, and that the model has no `religion` effect. Our challenging alternative hypothesis considers the model that contains both `sex`, `educ`, & `incmgrp` *and* `religion` effect. Based on our F-stat of 30.124 and our p-value of 4.535e-08, we have compelling evidence to reject the null hypothesis that there is no `religion` effect on `incomeattitude`. 
+
+In other words, the model of income attitude including `religion` has a better fit to the data than the model without `religion`.
 

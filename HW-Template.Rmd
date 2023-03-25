@@ -1,5 +1,5 @@
 ---
-title: "Lab 02 -- Data Analysis"
+title: "Lab XX -- Data Analysis"
 author: "Melissa Juarez"
 date: "February 21, 2022"
 output:

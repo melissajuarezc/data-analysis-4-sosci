@@ -1,0 +1,49 @@
+---
+title: "Lab 05 -- Data Analysis"
+author: "Melissa Juarez"
+date: "March 28, 2023"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(janitor)
+library(plyr)
+library(dplyr)
+
+## read data
+wvs <- read.csv(here::here("data/WVS.csv"))
+```
+
+##### Q1: Run a multiple linear probability model.  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results.  Were your expectations correct?  Why or why not?
+
+```{r q1, message=FALSE, warning=FALSE}
+
+```
+
+
+
+##### Q2: Run a multiple (binary) logistic model.  (It can be the same as the above LPM or -- even better -- a new model.)  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results in the logit scale.  Were your expectations correct?  Why or why not?
+
+```{r q2}
+
+```
+
+
+##### Q3: Get odds ratios from your logit model in Question 2 and interpret some of them.  
+
+
+```{r q3}
+
+```
+
+
+##### Q4: Get predicted probabilities from your logit model in Question 2 for some constellations of X values and interpret the results.  
+
+```{r q4}
+
+```
+
+

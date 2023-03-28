@@ -4,6 +4,7 @@ author: "Melissa Juarez"
 date: "March 28, 2023"
 output:
   html_document: default
+  pdf_document: default
 ---
 
 ```{r include=FALSE}
@@ -14,36 +15,237 @@ library(plyr)
 library(dplyr)
 
 ## read data
+## WVS codebook: https://www.thearda.com/data-archive?fid=WVS2010&tab=2
+## GSS codebood: https://www.thearda.com/data-archive?fid=GSS2006&tab=2 
 wvs <- read.csv(here::here("data/WVS.csv"))
+gss <- read.csv(here::here("data/GSS.2006.csv"))
+
 ```
 
-##### Q1: Run a multiple linear probability model.  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results.  Were your expectations correct?  Why or why not?
+##### Q1: Run a multiple linear probability model. Tell me how you think your independent variables will affect your dependent variable. Interpret your results. Were your expectations correct? Why or why not?
+
+*(note: I started this problem before Xi's recitation recording / lab examples came out, and I had already chosen to work with WVS data. For the following problems, I use GSS data like Xi suggested.)*
+
+How is the likelihood of respondent's willingness to fight for their country affected by political orientation and feelings of doing good for their society?
+
+In this problem, I look at the association between the following variables:
+
+-   `fight_in_war` / `V66`: This is a binary, categorical variable relating to the question: Of course, we all hope that there will not be another war, but if it were to come to that, would you be willing to fight for your country?
+    (V66).
+    In the original dataset, 1 indicates Yes, and 2 indicates No.
+    *However, I will be recoding the variable for 0 to mean no, and 1 to mean yes. This is so that the wording of the analysis is easier to understand, where an increase in the variable corresponds with an increase in willingness to go to war.*
+
+-   `political_orientation` / `V95`: This is an ordinal categorical variable relating to the question: In political matters, people talk of 'the left' (1) and 'the right.' (10) How would you place your views on this scale, generally speaking?
+    1 indicates the the person places themselves at having the strongest leftist views, whereas a 10 indicates that a person places themselves at having the strongest right-wing views.
+
+-   `social_good` / `V74`: This is an ordinal categorical variable relating to the question: "Now I will briefly describe some people. Using this card, would you please indicate for each description whether that person is very much like you, like you, somewhat like you, not like you, or not at all like you? It is important to this person to do something for the good of society" A 1 indicates that the respondent considers the person to be Very Much Like [Them], whereas a 6 indicates that the respondent considers the person to be Not At All Like [Them].
+    *However, I will be recoding this variable for 0 to be Not At All Like Me and for 5 to be Very Much Like Me. This is so that the wording of the analysis is easier to understand, where an increase in level corresponds with an increase in importance to do something for the good of society.*
+
+I expect that as respondent's political orientation get more right-winged and their feelings of doing good for their society increase, the likelihood that they will fight for their country in war will also increase.
+I think that the right wing is associated with patriotism and national defense, so they might be more likely to fight in war.
+Additionally, the more a person feels that they should do good for their society, they might also be inclined to be part of something larger than themselves, whether through political movements, war, etc.
+
+I will also limit this to only respondents from the US, since I am not knowledge able how political orientations manifest in values in other countries.
 
 ```{r q1, message=FALSE, warning=FALSE}
+# recode the variables
+wvs1 <- wvs %>%
+  mutate(V66 = case_when(
+    V66 == 1 ~ 1,
+    V66 == 2 ~ 0
+  ), V74 = case_when(
+    V74 == 1 ~ 5, #Very much like me becomes highest number
+    V74 == 2 ~ 4,
+    V74 == 3 ~ 3,
+    V74 == 4 ~ 2, 
+    V74 == 5 ~ 1,
+    V74 == 6 ~ 0 #No at all like me becomes 0
+  )) %>%
+  dplyr::rename(c(fight_in_war = V66, social_good = V74, political_orientation = V95)
+  )
+
+us_wvs <- wvs1 %>% filter(V2 == 840) ## US country code
+
+# create linear probability model
+lpm1 <- lm(fight_in_war ~ social_good + political_orientation, data = us_wvs)
+summary(lpm1)
 
 ```
 
+In the output above, we have the estimated model 
+$$
+\widehat{\text{fight_in_war}} = .244 + 0.019\text{social_good} + 0.051\text{political_orientation}
+$$ 
 
+We can interpret the model in the following way:
 
-##### Q2: Run a multiple (binary) logistic model.  (It can be the same as the above LPM or -- even better -- a new model.)  Tell me how you think your independent variables will affect your dependent variable.  Interpret your results in the logit scale.  Were your expectations correct?  Why or why not?
+-   Intercept: When respondents have no feelings of importance to do good for society and are at the lowest levels of identifying as right-wing, a respondent is expected to be 2.44% likely to be willing fight for their country in war.
+
+-   `social_good`: Political orientation held constant, when attitudes in feeling its important to do good for society increase by 1 level, there is an expected 1.9% increase in the likelihood that a respondent will be willing fight for their country in war.
+
+-   `political_orientation` Feelings of doing good for society held constant, when political orientation shifts from left to right-wing views by 1 level, there is an expected 5.1% increase in the likelihood that a respondent will be willing fight for their country in war.
+
+-   $R^2$: It is given that the Multiple R-squared = 0.04524.
+    We can interpret this by saying that 4.524% of the variation in the willingness to fight for your country in war is explained by its linear relationship political orientation and feelings of doing good for society.
+
+Both the relationships between the independent variables and the dependent variables fit my expectations as stated above; we know this because the coefficients of the variables were positive.
+
+##### Q2: Run a multiple (binary) logistic model. (It can be the same as the above LPM or -- even better -- a new model.) Tell me how you think your independent variables will affect your dependent variable. Interpret your results in the logit scale. Were your expectations correct? Why or why not?
+
+How is the likelihood of respondent's willingness to fight for their country affected by political orientation and feelings of doing good for their society?
+
+In this problem, I look at the association between the following variables in a logistic model:
+
+-   `cappun`: This is a binary, categorical variable relating to the question: "Do you favor or oppose the death penalty for persons convicted of murder?" In the original dataset, 1 indicates Favor, and 2 indicates Oppose.
+    *However, I will be recoding the variable for 0 to mean Oppose, and 1 to mean Favor. This is so that the wording of the analysis is easier to understand, where an increase in the variable corresponds with an increase odds of favoring the death penalty.*
+
+-   `polviews`: This is an ordinal categorical variable relating to the question: "I'm going to show you a seven-point scale on which the political views that people might hold are arranged from extremely liberal to extremely conservative. Where would you place yourself on this scale?" 1 indicates the the person places themselves at having the extremely liberal views, whereas a 7 indicates that a person places themselves at having the extremely conservative views.
+    I will recode them to start at 0 and end at 6.
+
+-   `sex`: This is an ordinal categorical variable where 1 indicates that the respondent is a male and 2 indicates that the respondent is a female.
+
+I expect that as respondent's political orientation get more right-winged (sex held constant), the log odds that they will favor capital punishment will increase, due to the nature of view on capital punishment in the Southern US. Additionally, I think that when a person is female as opposed to male (political views held constant), the log odds of favoring capital punishment will increase.
+Women tend to have more liberal views than men.
 
 ```{r q2}
+gss1 <- gss %>%
+  mutate(cappun = case_when(
+    cappun == 1 ~ 1, # favor is one
+    cappun == 2 ~ 0, # oppose is zero
+  ), sex = case_when(
+    sex == 1 ~ 0, # male
+    sex == 2 ~ 1, # female
+  ), polviews = case_when(
+    polviews == 1 ~ 0,
+    polviews == 2 ~ 1,
+    polviews == 3 ~ 2,
+    polviews == 4 ~ 3,
+    polviews == 5 ~ 4,
+    polviews == 6 ~ 5,
+    polviews == 7 ~ 6,
+  ))
+
+logm1 <- glm(cappun ~ polviews + sex, data = gss1, family = binomial)
+summary(logm1)
 
 ```
 
+In the output above, we have the estimated model 
+$$
+\widehat{\text{log(odds of favoring death penalty)}} = -.08144 + 0.320\text{polviews} - .299\text{sex}
+$$.
 
-##### Q3: Get odds ratios from your logit model in Question 2 and interpret some of them.  
+We can interpret the model in the following way:
 
+-   Intercept: Male respondents with the most extreme liberal views (polviews = 0, sex = 0) are expected to have a log odds of -0.08144 of favoring capital punishment.
+    *This coefficient is not statistically significant*
+
+-   `polviews`: Sex held constant, for every level increase of conservative views, there is an expected 0.320 increase in log odds of favoring the death penalty.
+
+-   `sex`: Political views held constant, being a woman decreases the expected log odds of favoring the death penalty by 0.299.
+
+This model fit my expectations, seeing as the coefficient for `polviews` is positive and the coefficient for `sex` is negative.
+
+##### Q3: Get odds ratios from your logit model in Question 2 and interpret some of them.
+
+To interpret the odds ratios, we must apply e to the coefficient:
 
 ```{r q3}
 
+exp(coef(logm1))
+
 ```
 
+The coefficients can be interpreted as follows: - intercept: Male respondents with the most extreme liberal views (polviews = 0, sex = 0) are expected to have an odds of 0.922 of favoring capital punishment.
+Thus, at this baseline, favoring the death penalty is less likely to occur than not.
 
-##### Q4: Get predicted probabilities from your logit model in Question 2 for some constellations of X values and interpret the results.  
+-   `polviews`: Sex held constant, the expected odds of favoring the death penalty increase by 37.8% for every 1 level increase of conservative views.
+    Thus, as respondents get more conservative, favoring the death penalty is more likely to occur than not.
+
+-   `sex`: Political views held constant, the expected odds of favoring the death penalty decrease by 25.83% when a respondent is a female.Thus, when a respondent is female, favoring the death penalty is less likely to occur than not.
+
+##### Q4: Get predicted probabilities from your logit model in Question 2 for some constellations of X values and interpret the results.
+
+Proof for my own understanding:
+
+Let $\hat\theta$ be the probability of favoring the death penalty.
+
+$$
+\begin{aligned}
+\frac{\hat\theta}{1 - \hat\theta} &= e^{\beta_0+\beta_1x_1+\beta_2x_2} \\
+\hat\theta &= e^{\beta_0+\beta_1x_1+\beta_2x_2} - \hat\theta (e^{\beta_0+\beta_1x_1+\beta_2x_2}) \\
+\hat\theta + \hat\theta (e^{\beta_0+\beta_1x_1+\beta_2x_2}) &= e^{\beta_0+\beta_1x_1+\beta_2x_2} \\
+\hat\theta &= \frac{e^{\beta_0+\beta_1x_1+\beta_2x_2}}{1 + e^{\beta_0+\beta_1x_1+\beta_2x_2}} \\
+\end{aligned}
+$$
+
+Any predicted probability of favoring the death penalty can be found by the above equation.
+
+I will look at the following constellations of X and find their expected their predicted probabilites of favoring the death penalty:
+
+1.    Female with Moderate Views (`sex` = 1, `polviews` = 3)
+2.    Male with Moderate Views (`sex` = 0, `polviews` = 3)
+3.    Female with Extremely Conservative views (`sex` = 1, `polviews` = 6)
+4.    Male with Extremely Conservative Views (`sex` = 0, `polviews` = 6)
+5.    Female with Extremely Liberal Views (`sex` = 1, `polviews` = 0)
+6.    Male with Extremely Liberal Views (`sex` = 0, `polviews` = 0)
 
 ```{r q4}
+predict_prob <- function(female, polview_level) {
+  sex_level <- if (female) {1} else {0}
+  new.person <- data.frame(polviews = polview_level,
+                           sex = sex_level)
+  ## predict log odds value
+  log_odds <- predict(logm1, newdata = new.person)
+  
+  ## use predicted probability function from above
+  predicted_probability <- exp(log_odds) / (1 + exp(log_odds))
+  
+  return(predicted_probability)
+}
+
+### Evaluate function at all constellations mentioned above
+# 1. Female with Moderate Views
+predict_prob(female = T, polview_level = 3)
+
+# 2. Male with Moderate Views
+predict_prob(female = F, polview_level = 3)
+
+# 3. Female with Extremely Conservative views
+predict_prob(female = T, polview_level = 6)
+
+# 4. Male with Extremely Conservative Views
+predict_prob(female = F, polview_level = 6)
+
+# 5. Female with Extremely Liberal Views
+predict_prob(female = T, polview_level = 0)
+
+# 6. Male with Extremely Liberal Views
+predict_prob(female = F, polview_level = 0)
 
 ```
+
+From the above output we see that:
+-    Female with Moderate Views are predicted to favor the death penalty with a probability of 0.641.
+
+-    Male with Moderate Views are predicted to favor the death penalty with a probability of 0.707.
+
+-    Female with Extremely Conservative views are predicted to favor the death penalty with a probability of 0.824.
+
+-    Male with Extremely Conservative Views are predicted to favor the death penalty with a probability of 0.863.
+
+-    Female with Extremely Liberal Views are predicted to favor the death penalty with a probability of 0.406.
+
+-    Male with Extremely Liberal Views are predicted to favor the death penalty with a probability of 0.480.
+
+Thus, we learn that females with extremely liberal views are the least likely to favor the death penalty, while males with extremely conservative views are the most likely to favor the death penalty (with a 45.7% greater probability!).
+
+
+
+
+
+
+
+
 
 

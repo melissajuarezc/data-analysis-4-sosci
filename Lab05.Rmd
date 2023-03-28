@@ -92,8 +92,6 @@ Both the relationships between the independent variables and the dependent varia
 
 ##### Q2: Run a multiple (binary) logistic model. (It can be the same as the above LPM or -- even better -- a new model.) Tell me how you think your independent variables will affect your dependent variable. Interpret your results in the logit scale. Were your expectations correct? Why or why not?
 
-How is the likelihood of respondent's willingness to fight for their country affected by political orientation and feelings of doing good for their society?
-
 In this problem, I look at the association between the following variables in a logistic model:
 
 -   `cappun`: This is a binary, categorical variable relating to the question: "Do you favor or oppose the death penalty for persons convicted of murder?" In the original dataset, 1 indicates Favor, and 2 indicates Oppose.

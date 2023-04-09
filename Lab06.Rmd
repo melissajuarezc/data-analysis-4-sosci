@@ -1,0 +1,116 @@
+---
+title: "Lab 06 -- Data Analysis"
+author: "Melissa Juarez"
+date: "April 08, 2023"
+output:
+  html_document: default
+---
+
+```{r include=FALSE}
+library(here)
+library(tidyverse)
+library(janitor)
+library(plyr)
+library(dplyr)
+
+## read data
+panel_data <- read.csv(here::here("data/panel-for-R.csv"))
+
+```
+
+```{r funs}
+# from TA recitation code lab 6
+clusterSE <- function(fit, cluster.var, data){ # note: cluster.var should be entered as character string
+  require(plm); require(lmtest)
+  
+  if (missing(data) & cluster.var %in% colnames(index(fit))){
+    cvar <- index(fit, cluster.var)
+    n <- length(unique(cvar))
+    N <- length(cvar)
+  }
+  else{
+    row.ids <- as.numeric(rownames(model.frame(fit)))
+    # 1. get number of clusters (omitting individuals with missingness on "divorce.easier" and/or "divorced")
+    n <- length(unique(data[row.ids, cluster.var]))
+    # 2. get number of observations (again omitting the same individuals with missingness)
+    N <- length(row.ids) 
+  }
+  
+  #3. compute degrees of freedom
+  df <- (n/(n - 1)) * (N - 1)/fit$df.residual
+  # compute variance-covariance matrix
+  vcov <- df*vcovHC(fit, type = "HC0", cluster = "group")
+  # retest coefficients  
+  coeftest(fit, vcov = vcov)
+}
+
+```
+
+
+##### Q1: Run a naive ("pooled") OLS regression on the panel data.  Tell we how you expect your Xs to affect your Y and why.  Apply clustered standard errors too.  Interpret your results.
+
+In this problem, I look at the association between the following variables in a naive OLS regression model:
+
+-   `gunlaw`: This is a binary, categorical variable relating to the question: "Would you favor or oppose a law which would require a person to obtain a police permit before he or she could buy a gun?" In the original dataset, 1 indicates Favor, and 2 indicates Oppose.
+    *However, I will be recoding the variable for 0 to mean Oppose, and 1 to mean Favor. This is so that the wording of the analysis is easier to understand, where an increase in the variable corresponds with an increase level of favoring the death penalty.*
+
+-   `polviews`: This is an ordinal categorical variable relating to the question: "I'm going to show you a seven-point scale on which the political views that people might hold are arranged from extremely liberal to extremely conservative. Where would you place yourself on this scale?" 1 indicates the the person places themselves at having the extremely liberal views, whereas a 7 indicates that a person places themselves at having the extremely conservative views. I will recode them to start at 0 and end at 6.
+    
+-   `sex`: This is an ordinal categorical variable where 1 indicates that the respondent is a male and 2 indicates that the respondent is a female.
+
+I expect that as respondent's political orientation get more right-winged (sex held constant), the effect of favoring stronger gun laws will decrease, due to the nature of view on gun laws as a highly protected topic by Republicans in the Southern US. Additionally, I believe that women will have stronger views about having gun-owners file for permits than men (political views held constant)
+
+```{r q1, message=FALSE, warning=FALSE}
+panel_data_sub <- panel_data %>%
+  mutate(gunlaw = case_when(
+    gunlaw == 1 ~ 1, # favor is one
+    gunlaw == 2 ~ 0, # oppose is zero
+  ), sex = case_when(
+    sex == 1 ~ 0, # male
+    sex == 2 ~ 1, # female
+  ), polviews = case_when(
+    polviews == 1 ~ 0, # Extreme Liberal
+    polviews == 2 ~ 1,
+    polviews == 3 ~ 2,
+    polviews == 4 ~ 3,
+    polviews == 5 ~ 4,
+    polviews == 6 ~ 5,
+    polviews == 7 ~ 6, # Extreme Conservative
+  )) %>%
+  select(idnum, panelwave, gunlaw, sex, polviews)
+
+m1 <- lm(gunlaw ~ polviews + sex, data = panel_data_sub)
+summary(m1)
+
+clusterSE(fit = m1, cluster.var = "idnum", data = panel_data_sub)
+
+```
+
+In the output above, we have the estimated model 
+$$
+\widehat{\text{gunlaw}} = 0.799 - 0.040\text{polviews} + 0.175\text{sex}
+$$.
+
+We can interpret the model in the following way:
+
+-   Intercept: Male respondents with the most extreme liberal views (polviews = 0, sex = 0) are expected be at 0.799 *** points towards favoring permit-based gun laws.
+
+-   `polviews`: Sex held constant, for every level increase of conservative views, there is an expected 0.040 *** point increase in favoring permit-based gun laws.
+
+-   `sex`: Political views held constant, being a woman increase the expected level of favoring permit-based gun laws by 0.175 *** points.
+
+This model fit my expectations, seeing as the coefficient for `polviews` is negative and the coefficient for `sex` is positive. Additionally, using the output from the clusterSE function, we see that all regressor coefficients are statistically significant.
+
+
+##### Q2: Run a first differences regression on the same model in Question 1.  Interpret your results.  Do you draw a different conclusion than in Question 1?  Explain.
+
+```{r q2}
+
+m2 <- plm(gunlaw ~ polviews + sex + as.factor(panelwave),  index = c("idnum", "panelwave"),  model = "fd", data = panel_data_sub)
+
+summary(m2)
+
+clusterSE(fit = m2, cluster.var = "idnum")
+
+```
+

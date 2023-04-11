@@ -18,7 +18,7 @@ panel_data <- read.csv(here::here("data/panel-for-R.csv"))
 
 ```
 
-```{r funs}
+```{r funs, include=FALSE}
 # from TA recitation code lab 6
 clusterSE <- function(fit, cluster.var, data){ # note: cluster.var should be entered as character string
   require(plm); require(lmtest)
@@ -51,35 +51,28 @@ clusterSE <- function(fit, cluster.var, data){ # note: cluster.var should be ent
 
 In this problem, I look at the association between the following variables in a naive OLS regression model:
 
--   `gunlaw`: This is a binary, categorical variable relating to the question: "Would you favor or oppose a law which would require a person to obtain a police permit before he or she could buy a gun?" In the original dataset, 1 indicates Favor, and 2 indicates Oppose.
-    *However, I will be recoding the variable for 0 to mean Oppose, and 1 to mean Favor. This is so that the wording of the analysis is easier to understand, where an increase in the variable corresponds with an increase level of favoring the death penalty.*
+-   `happy`: This is a ordinal categorical variable relating to the question: Taken all together, how would you say things are these days -- would you say that you are very happy, pretty happy, or not too happy?" In the original dataset, 1 means Very Happy and 3 means Not so Happy.  I will recode the variable so that 1 means not so happy and 3 means very happy.
 
--   `polviews`: This is an ordinal categorical variable relating to the question: "I'm going to show you a seven-point scale on which the political views that people might hold are arranged from extremely liberal to extremely conservative. Where would you place yourself on this scale?" 1 indicates the the person places themselves at having the extremely liberal views, whereas a 7 indicates that a person places themselves at having the extremely conservative views. I will recode them to start at 0 and end at 6.
+-   `health`: This is an ordinal categorical variable relating to the question: "Would you say your own health, in general, is excellent, good, fair, or poor? " 1 indicates the the person has Excellent health, whereas a 4 indicates that a person has poor health. I will recode the variable for 1 to mean poor health and 4 to mean excellent health.
     
--   `sex`: This is an ordinal categorical variable where 1 indicates that the respondent is a male and 2 indicates that the respondent is a female.
+-   `class`: This is an ordinal categorical variable relating to the question: "If you were asked to use one of four names for your social class, which would you say you belong in: the lower class, the working class, the middle class, or the upper class?" 1 indicates that the respondent places themselves in the lower class whereas 4 indicates that the person is Upper class.
 
-I expect that as respondent's political orientation get more right-winged (sex held constant), the effect of favoring stronger gun laws will decrease, due to the nature of view on gun laws as a highly protected topic by Republicans in the Southern US. Additionally, I believe that women will have stronger views about having gun-owners file for permits than men (political views held constant)
+I expect that as respondent's health gets better (class held constant), their happiness will increase, due to their better quality of life. Additionally, I expect that as class increases (health held constant), a persons happiness will also increase.
 
 ```{r q1, message=FALSE, warning=FALSE}
 panel_data_sub <- panel_data %>%
-  mutate(gunlaw = case_when(
-    gunlaw == 1 ~ 1, # favor is one
-    gunlaw == 2 ~ 0, # oppose is zero
-  ), sex = case_when(
-    sex == 1 ~ 0, # male
-    sex == 2 ~ 1, # female
-  ), polviews = case_when(
-    polviews == 1 ~ 0, # Extreme Liberal
-    polviews == 2 ~ 1,
-    polviews == 3 ~ 2,
-    polviews == 4 ~ 3,
-    polviews == 5 ~ 4,
-    polviews == 6 ~ 5,
-    polviews == 7 ~ 6, # Extreme Conservative
+  mutate(happy = case_when(
+    happy == 1 ~ 3, # very happy
+    happy == 3 ~ 1, # not so happy
+  ), health = case_when(
+    health == 1 ~ 4, # Excellent Health
+    health == 2 ~ 3,
+    health == 3 ~ 2,
+    health == 4 ~ 1, # Extreme Conservative
   )) %>%
-  select(idnum, panelwave, gunlaw, sex, polviews)
+  select(idnum, panelwave, health, class, happy)
 
-m1 <- lm(gunlaw ~ polviews + sex, data = panel_data_sub)
+m1 <- lm(happy ~ health + class, data = panel_data_sub)
 summary(m1)
 
 clusterSE(fit = m1, cluster.var = "idnum", data = panel_data_sub)
@@ -88,29 +81,40 @@ clusterSE(fit = m1, cluster.var = "idnum", data = panel_data_sub)
 
 In the output above, we have the estimated model 
 $$
-\widehat{\text{gunlaw}} = 0.799 - 0.040\text{polviews} + 0.175\text{sex}
+\widehat{\text{happy}} = 0.788 + 0.338\text{health} + 0.238\text{class}
 $$.
 
 We can interpret the model in the following way:
 
--   Intercept: Male respondents with the most extreme liberal views (polviews = 0, sex = 0) are expected be at 0.799 *** points towards favoring permit-based gun laws.
+-   Intercept: At the base level when health = 0 and class = 0, respondents are expected be at 0.788 *** level of happiness, indictatng the person is less than 'Not so Happy'.
 
--   `polviews`: Sex held constant, for every level increase of conservative views, there is an expected 0.040 *** point increase in favoring permit-based gun laws.
+-   `health`: Class held constant, for every 1 level increase of health, there is an expected 0.338 *** level increase in happiness.
 
--   `sex`: Political views held constant, being a woman increase the expected level of favoring permit-based gun laws by 0.175 *** points.
+-   `class`: Health held constant, for every 1 level increase in class, there is an expected 0.238 *** level increase in class.
 
-This model fit my expectations, seeing as the coefficient for `polviews` is negative and the coefficient for `sex` is positive. Additionally, using the output from the clusterSE function, we see that all regressor coefficients are statistically significant.
+This model fit my expectations, seeing as the coefficients for `health` and `class` are positive. Additionally, using the output from the clusterSE function, we see that all regressor coefficients are statistically significant.
 
 
 ##### Q2: Run a first differences regression on the same model in Question 1.  Interpret your results.  Do you draw a different conclusion than in Question 1?  Explain.
 
 ```{r q2}
 
-m2 <- plm(gunlaw ~ polviews + sex + as.factor(panelwave),  index = c("idnum", "panelwave"),  model = "fd", data = panel_data_sub)
+m2 <- plm(happy ~ health + class,  index = c("idnum", "panelwave"),  model = "fd", data = panel_data_sub)
 
 summary(m2)
 
-clusterSE(fit = m2, cluster.var = "idnum")
-
 ```
+In the output above, we have the estimated model 
+$$
+\widehat{\Delta\text{happy}} = -0.076 + 0.186\Delta\text{health} - 0.052\Delta\text{class}
+$$.
 
+We can interpret the model in the following way:
+
+-   Intercept: At the base level when health = 0 and class = 0, respondents are expected be at see a change of -0.076 ** levels of happiness, indicating a decrease in baseline happiness across the panel waves.
+
+-   `health`: Class held constant, a increase in 1 level of health leads to an expected 0.186 *** level increase in happiness, indicating an increase in happiness as a result of increase in health.
+
+-   `class`: Health held constant, a increase in 1 level of class leads to an expected 0.05 (n.s.) level decrease in happiness. This relationship is not significant.
+
+This model produces different results than in model one for the class variable. The FD model shows that there is no causal relationship between class and happiness, while our linear model showed that there is a significant relationship between two. For the health variable, the FD model showed that change in health outcomes leads to changes in happiness outcomes, and the linear model shows that there is a significant relationship between the two.
